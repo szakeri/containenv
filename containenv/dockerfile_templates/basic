@@ -1,0 +1,3 @@
+FROM   {{ IMAGE }}:{{ TAG }}
+{% for runcommand in RUNCOMMANDS %}
+RUN    {{ runcommand }}{% endfor%}
