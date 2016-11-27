@@ -6,7 +6,7 @@ import sys
 
 HOME = os.environ['HOME']
 CONTAINER_ENVS = os.path.abspath(
-    os.path.join(HOME, '.containenv', 'environments')
+    os.path.join(HOME, '.protoenv', 'environments')
 )
 print(HOME)
 PKG_ROOT = os.path.dirname(os.path.abspath(__file__))
