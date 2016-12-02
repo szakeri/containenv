@@ -23,6 +23,7 @@ PYTHON3 = {'IMAGE': 'ubuntu',
                     ['apt update && apt install -y python3\n       '+\
                      '&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*']}
 
+
 def init_containenv(config_variables):
     basictemplate = open(
         os.path.join(PKG_ROOT, 'dockerfile_templates', 'basic')
@@ -31,8 +32,10 @@ def init_containenv(config_variables):
     os.makedirs(CONTAINENV)
     outdfile = open(os.path.join(CONTAINENV, 'Dockerfile'), 'w').write(rendered)
 
+
 def run_containenv():
     pass
+
 
 def main():
     usage='Initialize or run a virtualenv-like contained environment.'
