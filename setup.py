@@ -12,7 +12,8 @@ setup(
     url='https://github.com/zancas/containenv.git',
     packages=find_packages(),
     install_requires=['docker-py >= 1.10.6, < 1.11',
-                      'jinja2 >= 2.8, < 3'],
+                      'jinja2 >= 2.8, < 3',
+                      'docopt >= 0.6.2, < 1'],
     entry_points={'console_scripts': [
         'containenv=containenv.cli:main']},
     package_data={'containenv':['dockerfile_templates/*']}
