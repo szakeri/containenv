@@ -1,6 +1,6 @@
 
 """
-Usage: containenv <command>
+Usage: containenv [--verbose] <command>
        containenv (-h | --help)
        containenv (-V | --version)
 
@@ -39,6 +39,7 @@ _DEFAULT_DOC = __doc__.format("""Common containenv commands:
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stderr))
 
+
 class ContainEnvDockerfileDoesNotExist(Exception):
     pass
 
@@ -63,7 +64,7 @@ class LogColorFormatter(logging.Formatter):
         self._fmt = (
             '{}{}%(levelname)s{} [%(asctime)s][%(name)s]{} %(message)s'.format(
                 Style.BRIGHT, color, Fore.RESET, Style.RESET_ALL))
-        return super(LogFormatter, self).format(record)
+        return super(LogColorFormatter, self).format(record)
 
 
 '''
@@ -98,6 +99,14 @@ def main():
         args = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
+        if args['--verbose']: 
+            handler = logging.StreamHandler(verbose_stream)
+            handler.setFormatter(LogColorFormatter())
+            handler.setLevel(logging.DEBUG)
+            rl = logging.getLogger()
+            rl.addHandler(handler)
+            rl.setLevel(logging.DEBUG)
+            logger.debug('Verbose logging activated')
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
