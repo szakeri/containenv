@@ -95,13 +95,9 @@ def main():
         clear_line() + verbose_stream.getvalue(), file=sys.stderr, end='')
     )
     try:
-        print(_DEFAULT_DOC)
-        print(VERSION)
         args = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
-        print(args['<command>'])
-        print(args['<args>'])
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
