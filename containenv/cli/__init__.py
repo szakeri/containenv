@@ -1,12 +1,19 @@
 
 """
 Usage: containenv <command>
+       containenv (-h | --help)
+       containenv (-V | --version)
 
 Options:
-  -h, --help Initialize or run a virtualenv-like contained environment.
+  -h, --help        Build or run a virtualenv-like contained environment.
+  -V, --version     Display the version and exit.
 
 {}
+
+See 'containenv help <command>' for more information on a specific command.
+
 """
+
 from __future__ import print_function
 
 from cStringIO import StringIO
@@ -30,7 +37,7 @@ _DEFAULT_DOC = __doc__.format("""Common containenv commands:
   run  Run a container environment with a context and Dockerfile as input.""")
 
 logger = logging.getLogger(__name__)
-
+logger.addHandler(logging.StreamHandler(sys.stderr))
 
 class ContainEnvDockerfileDoesNotExist(Exception):
     pass
@@ -88,9 +95,13 @@ def main():
         clear_line() + verbose_stream.getvalue(), file=sys.stderr, end='')
     )
     try:
+        print(_DEFAULT_DOC)
+        print(VERSION)
         args = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
+        print(args['<command>'])
+        print(args['<args>'])
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
