@@ -1,12 +1,14 @@
 
 """
-Usage: containenv [--verbose] <command>
+Usage: containenv [--verbose] [--debug <LEVEL>] <command>
        containenv (-h | --help)
        containenv (-V | --version)
 
 Options:
   -h, --help        Build or run a virtualenv-like contained environment.
   -V, --version     Display the version and exit.
+  -v, --verbose     Print logging information to the console.
+  -d <LEVEL>, --debug <LEVEL>  Set the sensitivity of loggers to [default: 30]
 
 {}
 
@@ -91,21 +93,29 @@ def main():
         This is the entry point method for the containenv command defined in
         setup.py.
     """
+    from pprint import pprint as pp
     verbose_stream = StringIO()
     atexit.register(lambda: print(
         clear_line() + verbose_stream.getvalue(), file=sys.stderr, end='')
     )
     try:
+        print('before docopt')
+        args = {'--debug': 10}
         args = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
-        if args['--verbose']: 
+        print('after docopt')
+        pp(args)
+        if args['--verbose']:
             handler = logging.StreamHandler(verbose_stream)
-            handler.setFormatter(LogColorFormatter())
-            handler.setLevel(logging.DEBUG)
             rl = logging.getLogger()
+            if args['--debug']:
+                debug_level = int(args['--debug'])
+                rl.setLevel(debug_level)
+                handler.setLevel(debug_level)
+                logger.info("debug level set to {}".format(debug_level))
+            handler.setFormatter(LogColorFormatter())
             rl.addHandler(handler)
-            rl.setLevel(logging.DEBUG)
             logger.debug('Verbose logging activated')
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
