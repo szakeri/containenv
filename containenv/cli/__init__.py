@@ -1,6 +1,6 @@
 
 """
-Usage: containenv [--verbose] [--debug <LEVEL>] <command>
+Usage: containenv [--verbose] [--debug <LEVEL>] <command> [<args>...]
        containenv (-h | --help)
        containenv (-V | --version)
 
@@ -20,8 +20,10 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import atexit
+import importlib
 import logging
 import os
+import pkgutil
 import sys
 
 from colorama import Fore
@@ -33,6 +35,7 @@ import jinja2
 
 from .. import VERSION
 from . import commands
+
 
 _DEFAULT_DOC = __doc__.format("""Common containenv commands:
   build Prepare a contained environment Dockerfile
@@ -69,6 +72,103 @@ class LogColorFormatter(logging.Formatter):
         return super(LogColorFormatter, self).format(record)
 
 
+def _run_command(argv):
+    """Run the command with the the given CLI options and exit.
+
+    Valid commands are modules in the containenv.cli.commands package. A command
+    module *must* have the same name as the command it represents as the import
+    system is used to retrieve the command module by the command name.
+
+    Command modules are expected to have a __doc__ string that is parseable by
+    docopt and contain a callable object named Command. If the the Command
+    object has a schema attribute, the arguments passed to the command will be
+    validated against the schema before the command is called.
+
+    Args:
+        argv: The list of command line arguments supplied for a command. The
+            first argument is expected to be the name of the command to be run.
+            Note that this is different than the full arguments parsed by
+            docopt for the entire program.
+
+    Raises:
+        ValueError: Raised if the user attempted to run an invalid command.
+    """
+    command_name = argv[0]
+    logger.info('Running command "%s" with args: %s', command_name, argv[1:])
+    mod = _get_command_module(command_name)
+    logger.debug('Parsing docstring:%s\nwith arguments %s.',
+                 mod.__doc__, argv)
+    args = docopt(mod.__doc__, argv=argv)
+    try:
+        logger.debug(
+            'Attempting to create command with command line arguments: %s',
+            args)
+        command = mod.Command(**args)
+    except TypeError:
+        logger.debug('Command does not take arguments.')
+        command = mod.Command()
+    if hasattr(command, 'schema'):
+        logger.debug('Validating command arguments against schema "%s".',
+                     command.schema)
+        args.update(command.schema.validate(args))
+    sys.exit(command(**args) or 0)
+
+
+def _get_command_module(command):
+    """Return the command module for the specified CLI command.
+
+    Args:
+        command: The name of the CLI command to use in finding a module in the
+            commands package.
+
+    Returns:
+        A module object for the given CLI command with a valid docopt __doc__
+        and a main() function that takes a list containing the command line
+        arguments.
+
+    Raises:
+        ValueError: Raised if no module with a name matching the command
+            exists in the commands package.
+    """
+    mod_name = '{}.{}'.format(commands.__name__, command)
+    try:
+        return importlib.import_module(mod_name)
+    except ImportError:
+        logger.exception('Unable to import "%s".', mod_name)
+        raise ValueError(
+            '"{}" is not a containenv command. \'containenv help -a\' lists all '
+            'available subcommands.'.format(command)
+        )
+
+
+def _help(command):
+    """Print out a help message and exit the program.
+
+    Args:
+        command: If a command value is supplied then print the help message for
+            the command module if available. If the command is '-a' or '--all',
+            then print the standard help message but with a full list of
+            available commands.
+
+    Raises:
+        ValueError: Raised if the help message is requested for an invalid
+            command or an unrecognized option is passed to help.
+    """
+    if not command:
+        doc = _DEFAULT_DOC
+    elif command in ('-a', '--all'):
+        available_commands = (command_name for _, command_name, _ in
+                              pkgutil.iter_modules(commands.__path__))
+        command_doc = 'Available commands:\n{}'.format(
+            '\n'.join('   {}'.format(command) for command in available_commands))
+        doc = __doc__.format(command_doc)
+    elif command.startswith('-'):
+        raise ValueError("Unrecognized option '{}'.".format(command))
+    else:
+        mod = _get_command_module(command)
+        doc = mod.__doc__
+    docopt(doc, argv=('--help',))
+        
 '''
 CURRENT = os.path.abspath(os.curdir)
 CONTAINENV = os.path.abspath(
@@ -99,39 +199,31 @@ def main():
         clear_line() + verbose_stream.getvalue(), file=sys.stderr, end='')
     )
     try:
-        print('before docopt')
-        args = {'--debug': 10}
         args = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
-        print('after docopt')
         pp(args)
         if args['--verbose']:
+            debug_level = int(args['--debug']) # default == logging default
             handler = logging.StreamHandler(verbose_stream)
+            handler.setLevel(debug_level)
             rl = logging.getLogger()
-            if args['--debug']:
-                debug_level = int(args['--debug'])
-                rl.setLevel(debug_level)
-                handler.setLevel(debug_level)
-                logger.info("debug level set to {}".format(debug_level))
+            rl.setLevel(debug_level)
+            logger.info("debug level set to {}".format(debug_level))
             handler.setFormatter(LogColorFormatter())
             rl.addHandler(handler)
             logger.debug('Verbose logging activated')
+        if args['<command>'] == 'help':
+            subcommand = next(iter(args['<args>']), None)
+            _help(subcommand)
+        else:
+            full_command = [args['<command>']] + args['<args>']
+            _run_command(full_command)
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
         logger.exception(e) 
         sys.exit(e)
-    '''
-    if args.build:
-        if os.path.isfile(os.path.join(CONTAINENV, 'Dockerfile')):
-            raise ContainEnvDockerfileAlreadyExists
-        build_containenv(PYTHON3)
-    else:
-        if not os.path.isfile(os.path.join(CONTAINENV, 'Dockerfile')):
-            raise ContainEnvDockerfileDoesNotExist
-        run_containenv()
-    ''' 
 
 if __name__ == '__main__':
     main()
