@@ -1,18 +1,17 @@
 
 """
-Usage: containenv [--verbose] [--debug <LEVEL>] [--help] ( init | activate ) [<args>...]
-       containenv (-h | --help)
+Usage: containenv [--verbose] [--debug <LEVEL>] ( init | activate | help ) [<args>...]
        containenv (-V | --version)
 
 Options:
-  -h, --help        Build or run a virtualenv-like contained environment.
+  -h, --help        Display this usage message.
   -V, --version     Display the version and exit.
   -v, --verbose     Print logging information to the console.
   -d <LEVEL>, --debug <LEVEL>  Set the sensitivity of loggers to [default: 30]
 
 {}
 
-See 'containenv help COMMAND' for more information on a specific COMMAND.
+See 'containenv --help COMMAND' for more information on a specific COMMAND.
 
 """
 
@@ -95,9 +94,12 @@ def _run_command(argv):
         ValueError: Raised if the user attempted to run an invalid command.
     """
     logger.debug('Inside _run_command argv is: {}'.format(argv))
-    if argv[0] is None:
-        argv[0] = 'default'
     command_name = argv[0]
+    if command_name == 'help':
+        if len(argv) == 2:
+            _help(argv[1])
+        else:
+            _help(None)
     logger.info('Running command "%s" with args: %s', command_name, argv[1:])
     mod = _get_command_module(command_name)
     logger.debug('Parsing docstring:%s\nwith arguments %s.',
@@ -158,6 +160,7 @@ def _help(command):
         ValueError: Raised if the help message is requested for an invalid
             command or an unrecognized option is passed to help.
     """
+    logging.debug('Inside _help command is {}'.format(command))
     if not command:
         doc = _DEFAULT_DOC
     elif command in ('-a', '--all'):
@@ -173,6 +176,18 @@ def _help(command):
         doc = mod.__doc__
     docopt(doc, argv=('--help',))
         
+
+def _get_command(tokens):
+    commands = []
+    for key in tokens:
+        if not key.startswith('<') \
+        and not key.startswith('-'):
+            commands.append(key)
+    for command in commands:
+        if tokens[command]:
+            return command
+    else:
+        return None
 
 def main():
     """Parse the command line options and launch the requested command.
@@ -193,8 +208,11 @@ def main():
         tokens = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
+        # alias command
+        pp(tokens)
+        command = _get_command(tokens)
+        # Process options
         if tokens['--verbose']:
-            pp(tokens)
             debug_level = int(tokens['--debug']) # default == logging default
             handler = logging.StreamHandler(verbose_stream)
             handler.setLevel(debug_level)
@@ -205,15 +223,8 @@ def main():
             rl.addHandler(handler)
             logger.debug('Verbose logging activated')
 
-        if tokens['--help']:
-            subcommand = next(iter(tokens['<args>']), None)
-            _help(subcommand)
-            logging.debug('I should never be logged')
-
-        for command in ('init', 'activate'):
-            if tokens[command]:
-                full_command = [command] + tokens['<args>']
-                _run_command(full_command)
+        # All options are now processed
+        _run_command([command] + tokens['<args>'])
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
