@@ -1,6 +1,6 @@
 
 """
-Usage: containenv [--verbose] [--debug <LEVEL>] <command> [<args>...]
+Usage: containenv [--verbose] [--debug <LEVEL>] [--help] ( init | activate ) [<args>...]
        containenv (-h | --help)
        containenv (-V | --version)
 
@@ -12,7 +12,7 @@ Options:
 
 {}
 
-See 'containenv help <command>' for more information on a specific command.
+See 'containenv help COMMAND' for more information on a specific COMMAND.
 
 """
 
@@ -38,8 +38,9 @@ from . import commands
 
 
 _DEFAULT_DOC = __doc__.format("""Common containenv commands:
-  build Prepare a contained environment Dockerfile
-  run  Run a container environment with a context and Dockerfile as input.""")
+  init      Prepare a contained environment Dockerfile
+  activate  Run a container environment with a context and Dockerfile as input.
+  """)
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stderr))
@@ -93,6 +94,9 @@ def _run_command(argv):
     Raises:
         ValueError: Raised if the user attempted to run an invalid command.
     """
+    logger.debug('Inside _run_command argv is: {}'.format(argv))
+    if argv[0] is None:
+        argv[0] = 'default'
     command_name = argv[0]
     logger.info('Running command "%s" with args: %s', command_name, argv[1:])
     mod = _get_command_module(command_name)
@@ -136,8 +140,8 @@ def _get_command_module(command):
     except ImportError:
         logger.exception('Unable to import "%s".', mod_name)
         raise ValueError(
-            '"{}" is not a containenv command. \'containenv help -a\' lists all '
-            'available subcommands.'.format(command)
+            '"{}" is not a containenv command. \'containenv help -a\' lists '
+            'all available subcommands.'.format(command)
         )
 
 
@@ -169,19 +173,6 @@ def _help(command):
         doc = mod.__doc__
     docopt(doc, argv=('--help',))
         
-'''
-CURRENT = os.path.abspath(os.curdir)
-CONTAINENV = os.path.abspath(
-    os.path.join(CURRENT, '.containenv')
-)
-PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-PYTHON3 = {'IMAGE': 'ubuntu',
-                'TAG': 'latest',
-                'RUNCOMMANDS': 
-                    ['apt update && apt install -y python3\n       '+\
-                     '&& rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*']}
-'''
 
 def main():
     """Parse the command line options and launch the requested command.
@@ -199,12 +190,12 @@ def main():
         clear_line() + verbose_stream.getvalue(), file=sys.stderr, end='')
     )
     try:
-        args = docopt(_DEFAULT_DOC,
+        tokens = docopt(_DEFAULT_DOC,
                       version='containenv {}'.format(VERSION),
                       options_first=True)
-        pp(args)
-        if args['--verbose']:
-            debug_level = int(args['--debug']) # default == logging default
+        if tokens['--verbose']:
+            pp(tokens)
+            debug_level = int(tokens['--debug']) # default == logging default
             handler = logging.StreamHandler(verbose_stream)
             handler.setLevel(debug_level)
             rl = logging.getLogger()
@@ -213,12 +204,16 @@ def main():
             handler.setFormatter(LogColorFormatter())
             rl.addHandler(handler)
             logger.debug('Verbose logging activated')
-        if args['<command>'] == 'help':
-            subcommand = next(iter(args['<args>']), None)
+
+        if tokens['--help']:
+            subcommand = next(iter(tokens['<args>']), None)
             _help(subcommand)
-        else:
-            full_command = [args['<command>']] + args['<args>']
-            _run_command(full_command)
+            logging.debug('I should never be logged')
+
+        for command in ('init', 'activate'):
+            if tokens[command]:
+                full_command = [command] + tokens['<args>']
+                _run_command(full_command)
     except (KeyboardInterrupt, EOFError):
         sys.exit("Cancelling at the User's request.")
     except Exception as e:
