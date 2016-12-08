@@ -4,14 +4,13 @@ Usage: containenv [--verbose] [--debug <LEVEL>] ( init | activate | help ) [<arg
        containenv (-V | --version)
 
 Options:
-  -h, --help        Display this usage message.
   -V, --version     Display the version and exit.
   -v, --verbose     Print logging information to the console.
   -d <LEVEL>, --debug <LEVEL>  Set the sensitivity of loggers to [default: 30]
 
 {}
 
-See 'containenv --help COMMAND' for more information on a specific COMMAND.
+See 'containenv help COMMAND' for more information on a specific COMMAND.
 
 """
 
@@ -39,6 +38,7 @@ from . import commands
 _DEFAULT_DOC = __doc__.format("""Common containenv commands:
   init      Prepare a contained environment Dockerfile
   activate  Run a container environment with a context and Dockerfile as input.
+  help      Print detailed usage information on a specific COMMAND.. or usage.
   """)
 
 logger = logging.getLogger(__name__)
@@ -137,6 +137,7 @@ def _get_command_module(command):
             exists in the commands package.
     """
     mod_name = '{}.{}'.format(commands.__name__, command)
+    logging.debug('mod_name: {}'.format(mod_name))
     try:
         return importlib.import_module(mod_name)
     except ImportError:
@@ -173,8 +174,10 @@ def _help(command):
         raise ValueError("Unrecognized option '{}'.".format(command))
     else:
         mod = _get_command_module(command)
+        logging.debug("mod is {}".format(mod))
         doc = mod.__doc__
-    docopt(doc, argv=('--help',))
+    logging.debug(doc)
+    docopt(doc, argv=('help',))
         
 
 def _get_command(tokens):
