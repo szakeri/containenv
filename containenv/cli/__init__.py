@@ -16,7 +16,10 @@ See 'containenv help COMMAND' for more information on a specific COMMAND.
 
 from __future__ import print_function
 
-from cStringIO import StringIO
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 import atexit
 import importlib
 import logging
