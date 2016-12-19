@@ -1,6 +1,6 @@
 
 """
-Usage: containenv [--verbose] [--debug <LEVEL>] ( init | activate | help ) [<args>...]
+Usage: containenv [--verbose] [--debug <LEVEL>] ( init | help ) [<args>...]
        containenv (-V | --version)
 
 Options:
