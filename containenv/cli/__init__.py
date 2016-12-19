@@ -11,6 +11,7 @@ Options:
 {}
 
 See 'containenv help COMMAND' for more information on a specific COMMAND.
+NOTE:  See also 'contain help' which is included in this package.
 
 """
 

@@ -1,4 +1,3 @@
-import os
 '''
 Usage: containenv [metasource]
        containenv (-h | --help)
@@ -6,3 +5,4 @@ Usage: containenv [metasource]
 Options:
   -h, --help        Display this help message and exit.
 '''
+import os
