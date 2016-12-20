@@ -172,12 +172,12 @@ class CommandContext(object):
             
     
     def _get_command(self, tokens):
+        '''See: https://github.com/docopt/docopt#usage-pattern-format'''
         commands = []
         for key in tokens:
             if not key.startswith('<') \
             and not key.startswith('-') \
             and not key.isupper():
-                '''See: https://github.com/docopt/docopt#usage-pattern-format'''
                 commands.append(key)
         for command in commands:
             if tokens[command]:
