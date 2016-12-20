@@ -1,4 +1,3 @@
-
 """
 Usage: containenv [--verbose] [--debug <LEVEL>] ( init | help ) [<args>...]
        containenv (-V | --version)
@@ -41,7 +40,6 @@ from . import commands
 
 _DEFAULT_DOC = __doc__.format("""Common containenv commands:
   init      Prepare a contained environment Dockerfile
-  activate  Run a container environment with a context and Dockerfile as input.
   help      Print detailed usage information on a specific COMMAND.. or usage.
   """)
 
@@ -79,9 +77,10 @@ class LogColorFormatter(logging.Formatter):
 def _run_command(argv):
     """Run the command with the the given CLI options and exit.
 
-    Valid commands are modules in the containenv.cli.commands package. A command
-    module *must* have the same name as the command it represents as the import
-    system is used to retrieve the command module by the command name.
+    Valid commands are modules in the containenv.cli.commands package. A
+    command module *must* have the same name as the command it represents as
+    the import system is used to retrieve the command module by the command
+    name.
 
     Command modules are expected to have a __doc__ string that is parseable by
     docopt and contain a callable object named Command. If the the Command
@@ -121,7 +120,7 @@ def _run_command(argv):
         logger.debug('Validating command arguments against schema "%s".',
                      command.schema)
         args.update(command.schema.validate(args))
-    sys.exit(command(**args) or 0)
+    sys.exit(command() or 0)
 
 
 def _get_command_module(command):
@@ -152,32 +151,36 @@ def _get_command_module(command):
         )
 
 
-def _help(command):
+def _help(help_subject_cmd):
     """Print out a help message and exit the program.
 
     Args:
-        command: If a command value is supplied then print the help message for
-            the command module if available. If the command is '-a' or '--all',
-            then print the standard help message but with a full list of
-            available commands.
+        help_subject_cmd: If a help_subject_cmd value is supplied then print
+            the help message for the command module if available. If the
+            help_subject_cmd is '-a' or '--all', then print the standard help
+            message but with a full list of available commands.
 
     Raises:
         ValueError: Raised if the help message is requested for an invalid
             command or an unrecognized option is passed to help.
     """
-    logging.debug('Inside _help command is {}'.format(command))
-    if not command:
-        doc = _DEFAULT_DOC
-    elif command in ('-a', '--all'):
+    logging.debug('Inside _help command is {}'.format(help_subject_cmd))
+    if not help_subject_cmd:
+        print(__doc__.format(''))
+        sys.exit(0)
+    elif help_subject_cmd in ('-a', '--all'):
         available_commands = (command_name for _, command_name, _ in
                               pkgutil.iter_modules(commands.__path__))
         command_doc = 'Available commands:\n{}'.format(
-            '\n'.join('   {}'.format(command) for command in available_commands))
-        doc = __doc__.format(command_doc)
-    elif command.startswith('-'):
-        raise ValueError("Unrecognized option '{}'.".format(command))
+            '\n'.join(
+                '   {}'.format(command) for command in available_commands)
+            )
+        print(__doc__.format(command_doc))
+        sys.exit(0)
+    elif help_subject_cmd.startswith('-'):
+        raise ValueError("Unrecognized option '{}'.".format(help_subject_cmd))
     else:
-        mod = _get_command_module(command)
+        mod = _get_command_module(help_subject_cmd)
         logging.debug("mod is {}".format(mod))
         doc = mod.__doc__
     logging.debug(doc)
@@ -188,7 +191,9 @@ def _get_command(tokens):
     commands = []
     for key in tokens:
         if not key.startswith('<') \
-        and not key.startswith('-'):
+        and not key.startswith('-') \
+        and not key.isupper():
+            '''See: https://github.com/docopt/docopt#usage-pattern-format'''
             commands.append(key)
     for command in commands:
         if tokens[command]:
@@ -216,7 +221,8 @@ def main():
                       version='containenv {}'.format(VERSION),
                       options_first=True)
         # alias command
-        pp(tokens)
+        # print('command line tokens')
+        # pp(tokens)
         command = _get_command(tokens)
         # Process options
         if tokens['--verbose']:
