@@ -17,6 +17,6 @@ setup(
                       'schema >= 0.6.5, < 0.7',
                       'colorama >= 0.3.7, < 0.4'],
     entry_points={'console_scripts': [
-        'containenv=containenv.cli:main']},
+        'containenv=containenv.containenv.cli:main']},
     package_data={'containenv':['dockerfile_templates/*']}
 )

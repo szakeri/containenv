@@ -34,7 +34,7 @@ import docker
 from docopt import docopt
 import jinja2
 
-from .. import VERSION
+from ... import VERSION
 from . import commands
 
 
