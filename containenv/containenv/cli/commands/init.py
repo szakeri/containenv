@@ -8,7 +8,7 @@ import os
 
 
 class Command(object):
-    '''A createnv command that writes a container config and builds an image
+    '''A containenv command that writes a container config and builds an image
     from it based on the current metasource directory.
 
         

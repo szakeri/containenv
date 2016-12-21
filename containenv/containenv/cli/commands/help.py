@@ -2,8 +2,7 @@
 Usage: containenv help [--all] [ init | help ]
 
 Options:
-  -h, --help        Display this help message and exit.
-  -a, --all         List available commands and exit.
+  -a, --all         Append available command list to usage and exit.
 '''
 import os
 
