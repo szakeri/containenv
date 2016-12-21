@@ -19,5 +19,5 @@ setup(
     entry_points={'console_scripts': [
         'containenv=containenv.containenv.cli:main',
         'contain=containenv.contain.cli:main']},
-    package_data={'containenv':['dockerfile_templates/*']}
+    package_data={'containenv': ['dockerfile_templates/*']}
 )
