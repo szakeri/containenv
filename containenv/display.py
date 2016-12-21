@@ -93,7 +93,7 @@ def display_status():
             raise e.exc
     except (KeyboardInterrupt, EOFError):
         raise
-    except:
+    except Exception:
         print_status('FAILED', Fore.RED)
         raise
     else:

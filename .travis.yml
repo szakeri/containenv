@@ -10,6 +10,6 @@ python:
   - '3.6-dev'
   - 'nightly'
 install:
-  - pip install hacking
+  - pip install flake8
 script:
   - flake8 .
