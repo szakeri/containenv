@@ -25,12 +25,6 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler(sys.stderr))
 
 
-class ContainEnvDockerfileDoesNotExist(Exception):
-    pass
-
-
-class ContainEnvDockerfileAlreadyExists(Exception):
-    pass
 
 
 class LogColorFormatter(logging.Formatter):
