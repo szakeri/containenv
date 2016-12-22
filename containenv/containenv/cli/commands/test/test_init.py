@@ -16,5 +16,62 @@
 #
 from ..init import Command
 
-def test_make_path():
-    pass
+def test__check_project_existence_no_dir():
+    c = Command('PATHTONONEXISTENTDIR')
+
+def test__check_project_existence_dir():
+    c = Command('PATHTOEXISTENTDIR')
+
+def test__check_initialization_state_uninitialized():
+    c = Command('PATHTOUNINITDIR')
+
+def test__check_initialization_state_initialized():
+    c = Command('PATHTOINITDIR')
+
+def test__catalog_languages_none():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__catalog_languages_none_registered():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__catalog_languages_pure_python_unregistered():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__catalog_languages_bash_python():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__catalog_languages_pure_go():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__catalog_languages_bash_go():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__render_config_config_invalid_missing():
+    c = Command('PATHTOPYTHONDIR')
+    
+def test__render_config_config_invalid_unexpected():
+    c = Command('PATHTOPYTHONDIR')
+    
+def test_write_container_config():
+    c = Command('PATHTOPYTHONDIR')
+    
+def test_write_entrypoint():
+    c = Command('PATHTOPYTHONDIR')
+
+def test_write_runcontainenv():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__create_tag_noreg_notaginvalid_chars():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__create_tag_noreg_taginvalid_chars():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__create_tag_reg_notaginvalid_chars():
+    c = Command('PATHTOPYTHONDIR')
+
+def test__create_tag_reg_taginvalid_chars():
+    c = Command('PATHTOPYTHONDIR')
+
+def test_build_image():
+    c = Command('PATHTOPYTHONDIR')

@@ -33,11 +33,15 @@ class Command(object):
 
     def __init__(self, metasource=os.curdir):
         self.metasource = metasource
-        self.tasks = [
-            ('first thing', lambda: None),
-            ('second thing', lambda: None),
-            ('third thing', lambda: None),
-            ]
+        self.tasks = [self._make_task(m) for m in [
+            self.make_path,
+            self.check_initialization_state,
+            self.make_containenv_dir,
+            self.write_container_config,
+            self.write_entrypoint,
+            self.write_runcontainenv,
+            self.build_image,
+            self.publish_image]]
 
     def __call__(self):
         """Write container config and build container .
@@ -49,6 +53,10 @@ class Command(object):
             'running some tasks',
             self.tasks)
 
+    def _make_task(self, method):
+        '''create a run_tasks compliant task'''
+        return (method.__doc__, method)
+
     def make_path(self):
         '''construct target project path'''
         self.proj_path = os.path.abspath(self.metasource)
@@ -59,7 +67,7 @@ class Command(object):
 
     def check_initialization_state(self):
         '''determine whether a target project exists'''
-        self._check_project_existence(self)
+        self._check_project_existence()
         # if .containenv....
         # raise AlreadyInitializedError
 
@@ -95,6 +103,14 @@ class Command(object):
         # pass in all environment variables
         pass
 
+    def _sanitize_tag(self):
+        '''the result must be a valid image tag'''
+        pass
+
+    def _prefix_registry(self):
+        '''the result must have the correct registry prefix'''
+        pass
+
     def _create_tag(self):
         '''create the correct tag'''
         self._sanitize_tag()
@@ -103,7 +119,7 @@ class Command(object):
 
     def build_image(self):
         '''from above results generate a tagged image'''
-        pass
+        self._create_tag()        
 
     def publish_image(self):
         '''if there's a shared registry publish to it'''
