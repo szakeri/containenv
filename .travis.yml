@@ -13,3 +13,7 @@ install:
   - pip install flake8
 script:
   - flake8 .
+notifications:
+  slack:
+    rooms:
+      - containenv:foEiwXZ0M19Fh1VoxS6rsN4d#travis-ci
