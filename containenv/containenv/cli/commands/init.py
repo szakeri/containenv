@@ -21,10 +21,13 @@ Usage: containenv init [metasource]
 Options:
   -h, --help        Display this help message and exit.
 '''
+import logging
 import os
 
 from ....display import run_tasks
+from ....exceptions import ProjectDirectoryDoesNotExist
 
+logger = logging.getLogger(__name__)
 
 class Command(object):
     '''A containenv command that writes a container config and builds an image
@@ -33,6 +36,7 @@ class Command(object):
 
     def __init__(self, metasource=os.curdir):
         self.metasource = metasource
+        logger.warning('self.metasource: {}'.format(self.metasource))
         self.tasks = [self._make_task(m) for m in [
             self.make_path,
             self.check_initialization_state,
@@ -63,7 +67,12 @@ class Command(object):
 
     def _check_project_existence(self):
         '''verify that self.proj_path is a valid project'''
-        pass
+        if not os.path.isdir(self.proj_path):
+            error = ('init must be called on a project directory but the '
+                     'argument it received was: {}\nwhich does not map to '
+                     'a path to an existing directory.'
+                     ''.format(self.metasource))
+            raise ProjectDirectoryDoesNotExist(error)
 
     def check_initialization_state(self):
         '''determine whether a target project exists'''

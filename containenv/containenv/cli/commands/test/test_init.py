@@ -14,13 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import logging
+import os
+
+import pytest
+
+from .....exceptions import ProjectDirectoryDoesNotExist
 from ..init import Command
 
-def test__check_project_existence_no_dir():
-    c = Command('PATHTONONEXISTENTDIR')
+logger = logging.getLogger(__name__)
 
-def test__check_project_existence_dir():
-    c = Command('PATHTOEXISTENTDIR')
+def test__check_project_existence_no_dir(testdirectory):
+    NONEXTANTDIR = os.path.join(testdirectory, 'NONE')
+    EXPECTED_ERROR = ('init must be called on a project directory but the'
+                      ' argument it received was: {}\nwhich does not map to a'
+                      ' path to an existing directory.'.format(NONEXTANTDIR))
+    c = Command(NONEXTANTDIR)
+    c.make_path()
+    with pytest.raises(ProjectDirectoryDoesNotExist) as PDDNEEIO:
+        c._check_project_existence()
+    assert PDDNEEIO.value.args[0] == EXPECTED_ERROR
+    
+
+def test__check_project_existence_dir(testdirectory):
+    c = Command(testdirectory)
+    c.make_path()
+    assert c._check_project_existence() is None
 
 def test__check_initialization_state_uninitialized():
     c = Command('PATHTOUNINITDIR')

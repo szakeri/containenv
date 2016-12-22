@@ -15,3 +15,15 @@
 # limitations under the License.
 #
 import pytest
+
+import shutil
+import tempfile
+
+@pytest.fixture
+def testdirectory(request):
+    tempdir = tempfile.mkdtemp()
+    def rm_rf_dir():
+        print(tempdir)
+        shutil.rmtree(tempdir)
+    request.addfinalizer(rm_rf_dir)
+    return tempdir
