@@ -25,6 +25,7 @@ import logging
 import os
 
 from ....display import run_tasks
+from ....exceptions import ProjectAlreadyInitialized
 from ....exceptions import ProjectDirectoryDoesNotExist
 
 logger = logging.getLogger(__name__)
@@ -77,8 +78,12 @@ class Command(object):
     def check_initialization_state(self):
         '''determine whether a target project exists'''
         self._check_project_existence()
-        # if .containenv....
-        # raise AlreadyInitializedError
+        print('THE PROJECT EXISTS')
+        if os.path.isdir(os.path.join(self.proj_path, '.containenv')):
+            error = ('init can only be called once per project, but the {}\n'
+                     'project already has a ".containenv" directory.'
+                     ''.format(self.proj_path))
+            raise ProjectAlreadyInitialized(error)
 
     def make_containenv_dir(self):
         '''make PROJECT/.containenv'''

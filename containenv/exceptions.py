@@ -6,6 +6,10 @@ class ProjectDirectoryDoesNotExist(ContainenvError):
     pass
 
 
+class ProjectAlreadyInitialized(ContainenvError):
+    pass
+
+
 class ContainEnvDockerfileDoesNotExist(ContainenvError):
     pass
 

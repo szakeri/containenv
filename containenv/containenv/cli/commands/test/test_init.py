@@ -19,8 +19,9 @@ import os
 
 import pytest
 
+from .....exceptions import ProjectAlreadyInitialized
 from .....exceptions import ProjectDirectoryDoesNotExist
-from ..init import Command
+from ..init import Command as Init
 
 logger = logging.getLogger(__name__)
 
@@ -29,68 +30,84 @@ def test__check_project_existence_no_dir(testdirectory):
     EXPECTED_ERROR = ('init must be called on a project directory but the'
                       ' argument it received was: {}\nwhich does not map to a'
                       ' path to an existing directory.'.format(NONEXTANTDIR))
-    c = Command(NONEXTANTDIR)
-    c.make_path()
+    init_command = Init(NONEXTANTDIR)
+    init_command.make_path()
     with pytest.raises(ProjectDirectoryDoesNotExist) as PDDNEEIO:
-        c._check_project_existence()
+        init_command._check_project_existence()
     assert PDDNEEIO.value.args[0] == EXPECTED_ERROR
     
 
 def test__check_project_existence_dir(testdirectory):
-    c = Command(testdirectory)
-    c.make_path()
-    assert c._check_project_existence() is None
+    init_command = Init(testdirectory)
+    init_command.make_path()
+    assert init_command._check_project_existence() is None
 
-def test__check_initialization_state_uninitialized():
-    c = Command('PATHTOUNINITDIR')
+def test__check_initialization_state_uninitialized(testdirectory):
+    init_command = Init(testdirectory)
+    init_command.make_path()
+    assert init_command.check_initialization_state() is None
 
-def test__check_initialization_state_initialized():
-    c = Command('PATHTOINITDIR')
+def test__check_initialization_state_initialized(testdirectory):
+    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
+    os.mkdir(EXTANTCONTAINENV)
+    EXPECTED_ERROR = ('init can only be called once per project, but the {}\n'
+                      'project already has a ".containenv" directory.'
+                      ''.format(testdirectory))
+
+    init_command = Init(testdirectory)
+    init_command.make_path()
+    if os.path.isdir(EXTANTCONTAINENV):
+        print('IT EXISTS!')
+        print(EXTANTCONTAINENV)
+        print(init_command.proj_path)
+    with pytest.raises(ProjectAlreadyInitialized) as PAIEIO:
+        init_command.check_initialization_state()
+    assert PAIEIO.value.args[0] == EXPECTED_ERROR
 
 def test__catalog_languages_none():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_languages_none_registered():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_languages_pure_python_unregistered():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_languages_bash_python():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_languages_pure_go():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_languages_bash_go():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__render_config_config_invalid_missing():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
     
 def test__render_config_config_invalid_unexpected():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
     
 def test_write_container_config():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
     
 def test_write_entrypoint():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test_write_runcontainenv():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__create_tag_noreg_notaginvalid_chars():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__create_tag_noreg_taginvalid_chars():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__create_tag_reg_notaginvalid_chars():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test__create_tag_reg_taginvalid_chars():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
 
 def test_build_image():
-    c = Command('PATHTOPYTHONDIR')
+    init_command = Init('PATHTOPYTHONDIR')
