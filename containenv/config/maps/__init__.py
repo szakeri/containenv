@@ -4,5 +4,6 @@ EXTENSION_MAP = { ".py": "python",
                   ".js": "javascript",
                   ".sh": "shell"}
 
-FILENAME_MAP = {"Makefile": "make",
-                ".git": "git"}
+FILENAME_MAP = {"Makefile": "make"}
+
+DIRNAME_MAP = {".git": "git"}

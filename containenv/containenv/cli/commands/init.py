@@ -28,7 +28,7 @@ from pprint import pprint as pp
 import site
 import sys
 
-from containenv.config.maps import EXTENSION_MAP, FILENAME_MAP
+from containenv.config.maps import EXTENSION_MAP, FILENAME_MAP, DIRNAME_MAP
 from containenv.display import run_tasks
 from containenv.exceptions import ProjectAlreadyInitialized
 from containenv.exceptions import ProjectDirectoryDoesNotExist
@@ -98,15 +98,23 @@ class Command(object):
 
     def _register_file(self, dirpath, fname, extension):
         pp(extension)
-        if extension == '':
-            self.dependency_catalog['EXTENSIONLESS']\
-               .add(os.path.join(dirpath, fname))
-        elif extension in EXTENSION_MAP:
+        # First use file extensions
+        if extension in EXTENSION_MAP:
             self.dependency_catalog[EXTENSION_MAP[extension]]\
+               .add(os.path.join(dirpath, fname+extension))
+        # Then check against fnames
+        elif fname in FILENAME_MAP:
+            self.dependency_catalog[FILENAME_MAP[fname]]\
                .add(os.path.join(dirpath, fname+extension))
         else:
             self.dependency_catalog['UNREGISTERED']\
                .add(os.path.join(dirpath, fname+extension))
+
+    def _register_dir(self, dirpath):
+        if dirpath in DIRNAME_MAP:
+            self.dependency_catalog[DIRNAME_MAP[dirpath]].add(dirpath)
+        else:
+            self.dependency_catalog['UNREGISTERED'].add(dirpath)
 
     def _catalog_dependencies(self):
         '''create a list of technologies used in the project'''
@@ -118,6 +126,7 @@ class Command(object):
             pp(files)
             for fname, extension in [os.path.splitext(f) for f in files]:
                 self._register_file(dirpath, fname, extension)
+            self._register_dir(dirpath)
         pp(self.dependency_catalog)
 
     def _render_config(self):

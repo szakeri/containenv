@@ -69,22 +69,15 @@ def test__catalog_dependencies_none_registered(testdirectory):
                 os.path.join(SUBDIRPATH, 'foo.txt'),
                 'setup.cfg',
                 'setup']] 
-    EXPECTED_EXTENSIONLESS = set()
-    EXPECTED_UNREG_EXT = set()
+    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, EXTANTCONTAINENV}
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
-        f, e = os.path.splitext(fn)
-        if e:
-            EXPECTED_UNREG_EXT.add(fn)
-        else:
-            EXPECTED_EXTENSIONLESS.add(fn)
+        EXPECTED_UNREGISTERED.add(fn)
     init_command = Init(testdirectory)
     init_command.make_path()
     init_command._catalog_dependencies()
-    assert init_command.dependency_catalog['EXTENSIONLESS'] == \
-        EXPECTED_EXTENSIONLESS
     assert init_command.dependency_catalog['UNREGISTERED'] == \
-        EXPECTED_UNREG_EXT
+        EXPECTED_UNREGISTERED
 
 def test__catalog_dependencies_empty_proj(testdirectory):
     init_command = Init(testdirectory)
