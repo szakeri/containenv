@@ -38,5 +38,6 @@ setup(
                     'contain=containenv.contain.cli:main'],
                   'pytest11':
                       ['containenv_fixtures = pytest_plugins.fixtures']},
-    package_data={'containenv': ['dockerfile_templates/*']}
+    package_data={'containenv': ['config/*',
+                                 'config/dockerfile_templates/*']}
 )

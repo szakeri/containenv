@@ -56,30 +56,44 @@ def test__check_initialization_state_initialized(testdirectory):
 
     init_command = Init(testdirectory)
     init_command.make_path()
-    if os.path.isdir(EXTANTCONTAINENV):
-        print('IT EXISTS!')
-        print(EXTANTCONTAINENV)
-        print(init_command.proj_path)
     with pytest.raises(ProjectAlreadyInitialized) as PAIEIO:
         init_command.check_initialization_state()
     assert PAIEIO.value.args[0] == EXPECTED_ERROR
 
-def test__catalog_languages_none():
+def test__catalog_dependencies_none(testdirectory):
+    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
+    os.mkdir(EXTANTCONTAINENV)
+    SUBDIRPATH = os.path.join(testdirectory, 'SUB')
+    os.mkdir(SUBDIRPATH)
+    open(os.path.join(testdirectory, SUBDIRPATH, 'foo.txt'), 'w')\
+         .write('TESTTEXT')
+    open(os.path.join(testdirectory, 'setup.cfg'), 'w')\
+         .write('#! /usr/bin/env python')
+    open(os.path.join(testdirectory, 'setup'), 'w')\
+         .write('#! /usr/bin/env python')
+    init_command = Init(testdirectory)
+    init_command.make_path()
+    init_command._catalog_dependencies()
+
+def test__catalog_dependencies_none_registered():
+    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
+    os.mkdir(EXTANTCONTAINENV)
+    open(os.path.join(testdirectory, 'setup.py'), 'w')\
+         .write('#! /usr/bin/env python')
+    open(os.path.join(testdirectory, ''), 'w')\
+         .write('#! /usr/bin/env python')
     init_command = Init('PATHTOPYTHONDIR')
 
-def test__catalog_languages_none_registered():
+def test__catalog_dependencies_pure_python_unregistered():
     init_command = Init('PATHTOPYTHONDIR')
 
-def test__catalog_languages_pure_python_unregistered():
+def test__catalog_dependencies_bash_python():
     init_command = Init('PATHTOPYTHONDIR')
 
-def test__catalog_languages_bash_python():
+def test__catalog_dependencies_pure_go():
     init_command = Init('PATHTOPYTHONDIR')
 
-def test__catalog_languages_pure_go():
-    init_command = Init('PATHTOPYTHONDIR')
-
-def test__catalog_languages_bash_go():
+def test__catalog_dependencies_bash_go():
     init_command = Init('PATHTOPYTHONDIR')
 
 def test__render_config_config_invalid_missing():

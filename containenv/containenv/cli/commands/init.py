@@ -21,12 +21,18 @@ Usage: containenv init [metasource]
 Options:
   -h, --help        Display this help message and exit.
 '''
-import logging
+import collections
 import os
+import logging
+from pprint import pprint as pp
+import site
+import sys
 
-from ....display import run_tasks
-from ....exceptions import ProjectAlreadyInitialized
-from ....exceptions import ProjectDirectoryDoesNotExist
+from containenv.config.maps import EXTENSION_MAP
+from containenv.display import run_tasks
+from containenv.exceptions import ProjectAlreadyInitialized
+from containenv.exceptions import ProjectDirectoryDoesNotExist
+
 
 logger = logging.getLogger(__name__)
 
@@ -86,12 +92,29 @@ class Command(object):
             raise ProjectAlreadyInitialized(error)
 
     def make_containenv_dir(self):
-        '''make PROJECT/.containenv'''
-        pass
+        '''make PROJECT/.nenv'''
+        self.containenvdir = os.path.join(self.proj_path, '.containenv')
+        os.mkdir(self.containenvdir)
 
-    def _catalog_languages(self):
-        '''create a list of languages used in the project'''
-        pass
+    def _catalog_dependencies(self):
+        '''create a list of technologies used in the project'''
+        
+        self.language_catalog = collections.defaultdict(list)
+        pp(EXTENSION_MAP)
+        for dirpath, dirs, files in os.walk(self.proj_path):
+            pp(files)
+            for fname, extension in [os.path.splitext(f) for f in files]:
+                pp(extension)
+                if extension == '':
+                    self.language_catalog['EXTENSIONLESS']\
+                        .append(os.path.join(dirpath, fname))
+                elif extension in EXTENSION_MAP:
+                    self.language_catalog[EXTENSION_MAP[extension]]\
+                        .append(os.path.join(dirpath, fname+extension))
+                else:
+                    self.language_catalog['UNREGISTERED']\
+                        .append(os.path.join(dirpath, fname+extension))
+        pp(self.language_catalog)
 
     def _render_config(self):
         '''produce a config file from the language catalog'''
@@ -103,7 +126,7 @@ class Command(object):
 
     def write_container_config(self):
         '''create and write container config'''
-        self._catalog_languages()
+        self._catalog_dependencies()
         self._render_config()
         self._write_config()
 

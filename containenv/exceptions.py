@@ -8,11 +8,3 @@ class ProjectDirectoryDoesNotExist(ContainenvError):
 
 class ProjectAlreadyInitialized(ContainenvError):
     pass
-
-
-class ContainEnvDockerfileDoesNotExist(ContainenvError):
-    pass
-
-
-class ContainEnvDockerfileAlreadyExists(ContainenvError):
-    pass
