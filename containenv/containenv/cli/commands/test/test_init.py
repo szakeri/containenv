@@ -60,29 +60,34 @@ def test__check_initialization_state_initialized(testdirectory):
         init_command.check_initialization_state()
     assert PAIEIO.value.args[0] == EXPECTED_ERROR
 
-def test__catalog_dependencies_none(testdirectory):
+def test__catalog_dependencies_none_registered(testdirectory):
     EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
     os.mkdir(EXTANTCONTAINENV)
     SUBDIRPATH = os.path.join(testdirectory, 'SUB')
     os.mkdir(SUBDIRPATH)
-    open(os.path.join(testdirectory, SUBDIRPATH, 'foo.txt'), 'w')\
-         .write('TESTTEXT')
-    open(os.path.join(testdirectory, 'setup.cfg'), 'w')\
-         .write('#! /usr/bin/env python')
-    open(os.path.join(testdirectory, 'setup'), 'w')\
-         .write('#! /usr/bin/env python')
+    fnames = [os.path.join(testdirectory, n) for n in [
+                os.path.join(SUBDIRPATH, 'foo.txt'),
+                'setup.cfg',
+                'setup']] 
+    EXPECTED_EXTENSIONLESS = set()
+    EXPECTED_UNREG_EXT = set()
+    for fn in fnames:
+        open(fn, 'w').write('TESTTEXT')
+        f, e = os.path.splitext(fn)
+        if e:
+            EXPECTED_UNREG_EXT.add(fn)
+        else:
+            EXPECTED_EXTENSIONLESS.add(fn)
     init_command = Init(testdirectory)
     init_command.make_path()
     init_command._catalog_dependencies()
+    assert init_command.dependency_catalog['EXTENSIONLESS'] == \
+        EXPECTED_EXTENSIONLESS
+    assert init_command.dependency_catalog['UNREGISTERED'] == \
+        EXPECTED_UNREG_EXT
 
-def test__catalog_dependencies_none_registered():
-    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
-    os.mkdir(EXTANTCONTAINENV)
-    open(os.path.join(testdirectory, 'setup.py'), 'w')\
-         .write('#! /usr/bin/env python')
-    open(os.path.join(testdirectory, ''), 'w')\
-         .write('#! /usr/bin/env python')
-    init_command = Init('PATHTOPYTHONDIR')
+def test__catalog_dependencies_empty_proj(testdirectory):
+    init_command = Init(testdirectory)
 
 def test__catalog_dependencies_pure_python_unregistered():
     init_command = Init('PATHTOPYTHONDIR')

@@ -28,7 +28,7 @@ from pprint import pprint as pp
 import site
 import sys
 
-from containenv.config.maps import EXTENSION_MAP
+from containenv.config.maps import EXTENSION_MAP, FILENAME_MAP
 from containenv.display import run_tasks
 from containenv.exceptions import ProjectAlreadyInitialized
 from containenv.exceptions import ProjectDirectoryDoesNotExist
@@ -96,25 +96,29 @@ class Command(object):
         self.containenvdir = os.path.join(self.proj_path, '.containenv')
         os.mkdir(self.containenvdir)
 
+    def _register_file(self, dirpath, fname, extension):
+        pp(extension)
+        if extension == '':
+            self.dependency_catalog['EXTENSIONLESS']\
+               .add(os.path.join(dirpath, fname))
+        elif extension in EXTENSION_MAP:
+            self.dependency_catalog[EXTENSION_MAP[extension]]\
+               .add(os.path.join(dirpath, fname+extension))
+        else:
+            self.dependency_catalog['UNREGISTERED']\
+               .add(os.path.join(dirpath, fname+extension))
+
     def _catalog_dependencies(self):
         '''create a list of technologies used in the project'''
         
-        self.language_catalog = collections.defaultdict(list)
+        self.dependency_catalog = collections.defaultdict(set)
+        print('self.dependency_catalog is {}'.format(self.dependency_catalog))
         pp(EXTENSION_MAP)
         for dirpath, dirs, files in os.walk(self.proj_path):
             pp(files)
             for fname, extension in [os.path.splitext(f) for f in files]:
-                pp(extension)
-                if extension == '':
-                    self.language_catalog['EXTENSIONLESS']\
-                        .append(os.path.join(dirpath, fname))
-                elif extension in EXTENSION_MAP:
-                    self.language_catalog[EXTENSION_MAP[extension]]\
-                        .append(os.path.join(dirpath, fname+extension))
-                else:
-                    self.language_catalog['UNREGISTERED']\
-                        .append(os.path.join(dirpath, fname+extension))
-        pp(self.language_catalog)
+                self._register_file(dirpath, fname, extension)
+        pp(self.dependency_catalog)
 
     def _render_config(self):
         '''produce a config file from the language catalog'''
