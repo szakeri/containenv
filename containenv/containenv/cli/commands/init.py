@@ -28,11 +28,13 @@ from pprint import pprint as pp
 import site
 import sys
 
-from containenv.config.maps import EXTENSION_MAP, FILENAME_MAP, DIRNAME_MAP
+from containenv.config.dependencymaps import EXTENSION_MAP
+from containenv.config.dependencymaps import FILENAME_MAP
+from containenv.config.dependencymaps import DIRNAME_MAP
 from containenv.display import run_tasks
-from containenv.exceptions import ProjectAlreadyInitialized,\
-                                  ProjectDirectoryDoesNotExist,\
-                                  ProjectContainsNoRegisteredNodes
+from containenv.exceptions import ProjectAlreadyInitialized
+from containenv.exceptions import ProjectDirectoryDoesNotExist
+from containenv.exceptions import ProjectContainsNoRegisteredNodes
 
 
 logger = logging.getLogger(__name__)

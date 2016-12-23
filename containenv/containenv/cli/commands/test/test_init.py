@@ -26,7 +26,9 @@ from containenv.containenv.cli.commands.init import Command as Init
 
 logger = logging.getLogger(__name__)
 
+# tests pre self.make_containenv_dir
 def test__check_project_existence_no_dir(testdirectory):
+    '''The argument does not a even correspond to a directory.'''
     NONEXTANTDIR = os.path.join(testdirectory, 'NONE')
     EXPECTED_ERROR = ('init must be called on a project directory but the'
                       ' argument it received was: {}\nwhich does not map to a'
@@ -37,45 +39,50 @@ def test__check_project_existence_no_dir(testdirectory):
         init_command._check_project_existence()
     assert PDDNEEIO.value.args[0] == EXPECTED_ERROR
     
-
 def test__check_project_existence_dir(testdirectory):
+    '''The argument does correspond to a directory.'''
     init_command = Init(testdirectory)
     init_command.make_path()
     assert init_command._check_project_existence() is None
 
 def test__check_initialization_state_uninitialized(testdirectory):
+    '''The argument does not _already_ possess a ".containenv".'''
     init_command = Init(testdirectory)
     init_command.make_path()
     assert init_command.check_initialization_state() is None
 
-def test__check_initialization_state_initialized(testdirectory):
-    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
-    os.mkdir(EXTANTCONTAINENV)
+# tests post self.make_containenv_dir
+@pytest.fixture
+def testdirskeleton(testdirectory):
+    SUBDIRPATH = os.path.join(testdirectory, 'SUB')
+    os.mkdir(SUBDIRPATH)
+    init_command = Init(testdirectory)
+    init_command.make_path()
+    init_command.make_containenv_dir()
+    return testdirectory, init_command.containenvdir, SUBDIRPATH, init_command
+
+def test__check_initialization_state_already_initialized(testdirskeleton):
+    '''The argument _already_ (incorrectly) possesses a ".containenv".'''
+    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
     EXPECTED_ERROR = ('init can only be called once per project, but the {}\n'
                       'project already has a ".containenv" directory.'
                       ''.format(testdirectory))
 
-    init_command = Init(testdirectory)
-    init_command.make_path()
     with pytest.raises(ProjectAlreadyInitialized) as PAIEIO:
         init_command.check_initialization_state()
     assert PAIEIO.value.args[0] == EXPECTED_ERROR
 
-def test__catalog_dependencies_none_registered(testdirectory):
-    EXTANTCONTAINENV = os.path.join(testdirectory, '.containenv')
-    os.mkdir(EXTANTCONTAINENV)
-    SUBDIRPATH = os.path.join(testdirectory, 'SUB')
-    os.mkdir(SUBDIRPATH)
+def test__catalog_dependencies_none_registered(testdirskeleton):
+    '''none of the nodes are registered as containenv dependencies'''
+    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
     fnames = [os.path.join(testdirectory, n) for n in [
                 os.path.join(SUBDIRPATH, 'foo.txt'),
                 'setup.cfg',
                 'setup']] 
-    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, EXTANTCONTAINENV}
+    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
         EXPECTED_UNREGISTERED.add(fn)
-    init_command = Init(testdirectory)
-    init_command.make_path()
     with pytest.raises(ProjectContainsNoRegisteredNodes) as PCNRNEIO:
         init_command._catalog_dependencies()
     assert init_command.unregistered_nodes == EXPECTED_UNREGISTERED
@@ -83,10 +90,7 @@ def test__catalog_dependencies_none_registered(testdirectory):
         ('None of the nodes (files and directories) in this project are'
          ' registered with containenv.')
 
-def test__catalog_dependencies_empty_proj(testdirectory):
-    init_command = Init(testdirectory)
-
-def test__catalog_dependencies_pure_python_unregistered():
+def test__catalog_dependencies_pure_python_unregistered(testdirectory):
     init_command = Init('PATHTOPYTHONDIR')
 
 def test__catalog_dependencies_bash_python():
