@@ -19,9 +19,10 @@ import os
 
 import pytest
 
-from .....exceptions import ProjectAlreadyInitialized
-from .....exceptions import ProjectDirectoryDoesNotExist
-from ..init import Command as Init
+from containenv.exceptions import ProjectAlreadyInitialized,\
+                                  ProjectDirectoryDoesNotExist,\
+                                  ProjectContainsNoRegisteredNodes
+from containenv.containenv.cli.commands.init import Command as Init
 
 logger = logging.getLogger(__name__)
 
@@ -75,9 +76,12 @@ def test__catalog_dependencies_none_registered(testdirectory):
         EXPECTED_UNREGISTERED.add(fn)
     init_command = Init(testdirectory)
     init_command.make_path()
-    init_command._catalog_dependencies()
-    assert init_command.dependency_catalog['UNREGISTERED'] == \
-        EXPECTED_UNREGISTERED
+    with pytest.raises(ProjectContainsNoRegisteredNodes) as PCNRNEIO:
+        init_command._catalog_dependencies()
+    assert init_command.unregistered_nodes == EXPECTED_UNREGISTERED
+    assert PCNRNEIO.value.args[0] == \
+        ('None of the nodes (files and directories) in this project are'
+         ' registered with containenv.')
 
 def test__catalog_dependencies_empty_proj(testdirectory):
     init_command = Init(testdirectory)

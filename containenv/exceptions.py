@@ -8,3 +8,7 @@ class ProjectDirectoryDoesNotExist(ContainenvError):
 
 class ProjectAlreadyInitialized(ContainenvError):
     pass
+
+
+class ProjectContainsNoRegisteredNodes(ContainenvError):
+    pass

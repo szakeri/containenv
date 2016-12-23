@@ -30,8 +30,9 @@ import sys
 
 from containenv.config.maps import EXTENSION_MAP, FILENAME_MAP, DIRNAME_MAP
 from containenv.display import run_tasks
-from containenv.exceptions import ProjectAlreadyInitialized
-from containenv.exceptions import ProjectDirectoryDoesNotExist
+from containenv.exceptions import ProjectAlreadyInitialized,\
+                                  ProjectDirectoryDoesNotExist,\
+                                  ProjectContainsNoRegisteredNodes
 
 
 logger = logging.getLogger(__name__)
@@ -100,34 +101,38 @@ class Command(object):
         pp(extension)
         # First use file extensions
         if extension in EXTENSION_MAP:
-            self.dependency_catalog[EXTENSION_MAP[extension]]\
+            self.registered_dependency_catalog[EXTENSION_MAP[extension]]\
                .add(os.path.join(dirpath, fname+extension))
         # Then check against fnames
         elif fname in FILENAME_MAP:
-            self.dependency_catalog[FILENAME_MAP[fname]]\
+            self.registered_dependency_catalog[FILENAME_MAP[fname]]\
                .add(os.path.join(dirpath, fname+extension))
         else:
-            self.dependency_catalog['UNREGISTERED']\
-               .add(os.path.join(dirpath, fname+extension))
+            self.unregistered_nodes.add(os.path.join(dirpath, fname+extension))
 
     def _register_dir(self, dirpath):
         if dirpath in DIRNAME_MAP:
-            self.dependency_catalog[DIRNAME_MAP[dirpath]].add(dirpath)
+            self.registered_dependency_catalog[DIRNAME_MAP[dirpath]].add(dirpath)
         else:
-            self.dependency_catalog['UNREGISTERED'].add(dirpath)
+            self.unregistered_nodes.add(dirpath)
 
     def _catalog_dependencies(self):
         '''create a list of technologies used in the project'''
         
-        self.dependency_catalog = collections.defaultdict(set)
-        print('self.dependency_catalog is {}'.format(self.dependency_catalog))
+        self.registered_dependency_catalog = collections.defaultdict(set)
+        self.unregistered_nodes = set()
+        print('self.registered_dependency_catalog is {}'.format(self.registered_dependency_catalog))
         pp(EXTENSION_MAP)
         for dirpath, dirs, files in os.walk(self.proj_path):
             pp(files)
             for fname, extension in [os.path.splitext(f) for f in files]:
                 self._register_file(dirpath, fname, extension)
             self._register_dir(dirpath)
-        pp(self.dependency_catalog)
+        pp(self.registered_dependency_catalog)
+        if not self.registered_dependency_catalog:
+            error = ('None of the nodes (files and directories) in this'
+                     ' project are registered with containenv.')
+            raise ProjectContainsNoRegisteredNodes(error)
 
     def _render_config(self):
         '''produce a config file from the language catalog'''
