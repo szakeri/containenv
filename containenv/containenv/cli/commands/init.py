@@ -113,8 +113,10 @@ class Command(object):
             self.unregistered_nodes.add(os.path.join(dirpath, fname+extension))
 
     def _register_dir(self, dirpath):
-        if dirpath in DIRNAME_MAP:
-            self.registered_dependency_catalog[DIRNAME_MAP[dirpath]].add(dirpath)
+        dirname = os.path.basename(dirpath)
+        if dirname in DIRNAME_MAP:
+            self.registered_dependency_catalog[
+                DIRNAME_MAP[dirname]].add(dirpath)
         else:
             self.unregistered_nodes.add(dirpath)
 

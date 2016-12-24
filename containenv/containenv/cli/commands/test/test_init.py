@@ -92,10 +92,13 @@ def test__catalog_dependencies_none_registered(testdirskeleton):
 def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
     testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
     EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
+    gitdirpath = os.path.join(testdirectory, '.git')
+    os.mkdir(gitdirpath)
     fnames = [os.path.join(testdirectory, n) for n in [
                 os.path.join(SUBDIRPATH, 'foo.go'),
                 'Makefile.build',
-                'setup.sh']] 
+                'setup.sh',
+                'py.foo']] 
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
     init_command._catalog_dependencies()
@@ -105,6 +108,11 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
         set([fnames[1]])
     assert init_command.registered_dependency_catalog['shell'] ==\
         set([fnames[2]])
+    assert init_command.unregistered_nodes ==\
+        {fnames[3], testdirectory, SUBDIRPATH, CONTAINENVPATH}
+    assert init_command.registered_dependency_catalog['git'] ==\
+        set([gitdirpath])
+   
     
     
 
