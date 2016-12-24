@@ -67,7 +67,6 @@ def test__check_initialization_state_already_initialized(testdirskeleton):
     EXPECTED_ERROR = ('init can only be called once per project, but the {}\n'
                       'project already has a ".containenv" directory.'
                       ''.format(testdirectory))
-
     with pytest.raises(ProjectAlreadyInitialized) as PAIEIO:
         init_command.check_initialization_state()
     assert PAIEIO.value.args[0] == EXPECTED_ERROR
@@ -75,11 +74,11 @@ def test__check_initialization_state_already_initialized(testdirskeleton):
 def test__catalog_dependencies_none_registered(testdirskeleton):
     '''none of the nodes are registered as containenv dependencies'''
     testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
+    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     fnames = [os.path.join(testdirectory, n) for n in [
                 os.path.join(SUBDIRPATH, 'foo.txt'),
                 'setup.cfg',
                 'setup']] 
-    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
         EXPECTED_UNREGISTERED.add(fn)
@@ -90,17 +89,24 @@ def test__catalog_dependencies_none_registered(testdirskeleton):
         ('None of the nodes (files and directories) in this project are'
          ' registered with containenv.')
 
-def test__catalog_dependencies_pure_python_unregistered(testdirectory):
-    init_command = Init('PATHTOPYTHONDIR')
-
-def test__catalog_dependencies_bash_python():
-    init_command = Init('PATHTOPYTHONDIR')
-
-def test__catalog_dependencies_pure_go():
-    init_command = Init('PATHTOPYTHONDIR')
-
-def test__catalog_dependencies_bash_go():
-    init_command = Init('PATHTOPYTHONDIR')
+def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
+    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
+    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
+    fnames = [os.path.join(testdirectory, n) for n in [
+                os.path.join(SUBDIRPATH, 'foo.go'),
+                'Makefile.build',
+                'setup.sh']] 
+    for fn in fnames:
+        open(fn, 'w').write('TESTTEXT')
+    init_command._catalog_dependencies()
+    assert init_command.registered_dependency_catalog['go'] ==\
+        set([fnames[0]])
+    assert init_command.registered_dependency_catalog['make'] ==\
+        set([fnames[1]])
+    assert init_command.registered_dependency_catalog['shell'] ==\
+        set([fnames[2]])
+    
+    
 
 def test__render_config_config_invalid_missing():
     init_command = Init('PATHTOPYTHONDIR')

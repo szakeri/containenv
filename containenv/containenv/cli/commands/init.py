@@ -123,8 +123,6 @@ class Command(object):
         
         self.registered_dependency_catalog = collections.defaultdict(set)
         self.unregistered_nodes = set()
-        print('self.registered_dependency_catalog is {}'.format(self.registered_dependency_catalog))
-        pp(EXTENSION_MAP)
         for dirpath, dirs, files in os.walk(self.proj_path):
             pp(files)
             for fname, extension in [os.path.splitext(f) for f in files]:
