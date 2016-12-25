@@ -74,7 +74,7 @@ def test__check_initialization_state_already_initialized(testdirskeleton):
 def test__catalog_dependencies_none_registered(testdirskeleton):
     '''none of the nodes are registered as containenv dependencies'''
     testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
-    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
+    EXPECTED_UNREGISTERED = {SUBDIRPATH, CONTAINENVPATH}
     fnames = [os.path.join(testdirectory, n) for n in [
                 os.path.join(SUBDIRPATH, 'foo.txt'),
                 'setup.cfg',
@@ -98,23 +98,22 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
                 os.path.join(SUBDIRPATH, 'foo.go'),
                 'Makefile.build',
                 'setup.sh',
-                'py.foo']] 
+                'py.foo',
+                os.path.join(gitdirpath, 'didntgetregistered.py')]] 
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
     init_command._catalog_dependencies()
-    assert init_command.registered_dependency_catalog['go'] ==\
+    assert init_command.registered_dependency_catalog.pop('go') ==\
         set([fnames[0]])
-    assert init_command.registered_dependency_catalog['make'] ==\
+    assert init_command.registered_dependency_catalog.pop('make') ==\
         set([fnames[1]])
-    assert init_command.registered_dependency_catalog['shell'] ==\
+    assert init_command.registered_dependency_catalog.pop('shell') ==\
         set([fnames[2]])
-    assert init_command.unregistered_nodes ==\
-        {fnames[3], testdirectory, SUBDIRPATH, CONTAINENVPATH}
-    assert init_command.registered_dependency_catalog['git'] ==\
+    assert init_command.registered_dependency_catalog.pop('git') ==\
         set([gitdirpath])
-   
-    
-    
+    assert not init_command.registered_dependency_catalog
+    assert init_command.unregistered_nodes ==\
+        {fnames[3], SUBDIRPATH, CONTAINENVPATH}
 
 def test__render_config_config_invalid_missing():
     init_command = Init('PATHTOPYTHONDIR')

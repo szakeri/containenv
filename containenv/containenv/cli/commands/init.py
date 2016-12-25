@@ -24,7 +24,6 @@ Options:
 import collections
 import os
 import logging
-from pprint import pprint as pp
 import site
 import sys
 
@@ -87,7 +86,6 @@ class Command(object):
     def check_initialization_state(self):
         '''determine whether a target project exists'''
         self._check_project_existence()
-        print('THE PROJECT EXISTS')
         if os.path.isdir(os.path.join(self.proj_path, '.containenv')):
             error = ('init can only be called once per project, but the {}\n'
                      'project already has a ".containenv" directory.'
@@ -100,7 +98,6 @@ class Command(object):
         os.mkdir(self.containenvdir)
 
     def _register_file(self, dirpath, fname, extension):
-        pp(extension)
         # First use file extensions
         if extension in EXTENSION_MAP:
             self.registered_dependency_catalog[EXTENSION_MAP[extension]]\
@@ -112,25 +109,27 @@ class Command(object):
         else:
             self.unregistered_nodes.add(os.path.join(dirpath, fname+extension))
 
-    def _register_dir(self, dirpath):
-        dirname = os.path.basename(dirpath)
-        if dirname in DIRNAME_MAP:
+    def _register_dirs(self, dirpath, dirn, dirs):
+        fullpath = os.path.join(dirpath, dirn)
+        if dirn in DIRNAME_MAP:
             self.registered_dependency_catalog[
-                DIRNAME_MAP[dirname]].add(dirpath)
+                DIRNAME_MAP[dirn]].add(fullpath)
+            self.registered_directories.add(fullpath)
         else:
-            self.unregistered_nodes.add(dirpath)
+            self.unregistered_nodes.add(fullpath)
 
     def _catalog_dependencies(self):
         '''create a list of technologies used in the project'''
-        
+        self.registered_directories = set()
         self.registered_dependency_catalog = collections.defaultdict(set)
         self.unregistered_nodes = set()
         for dirpath, dirs, files in os.walk(self.proj_path):
-            pp(files)
+            if dirpath in self.registered_directories:
+                continue
             for fname, extension in [os.path.splitext(f) for f in files]:
                 self._register_file(dirpath, fname, extension)
-            self._register_dir(dirpath)
-        pp(self.registered_dependency_catalog)
+            for dirn in dirs:
+                self._register_dirs(dirpath, dirn, dirs)
         if not self.registered_dependency_catalog:
             error = ('None of the nodes (files and directories) in this'
                      ' project are registered with containenv.')
