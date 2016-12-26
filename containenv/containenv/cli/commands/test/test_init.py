@@ -130,7 +130,15 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
     assert init_command.unregistered_nodes ==\
         {fnames[3], SUBDIRPATH, CONTAINENVPATH}
 
-def test__render_config_config_invalid_missing(testdirgeneric):
+BASH_GOT_GIT_MAKE_TMPL = '''FROM   ubuntu:latest
+RUN    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y\n'''
+CMDS = ['       bash \\',
+        '       git \\',
+        '       golang \\',
+        '       make \\',
+        '       && rm -rf /var/lib/apt/lists/*']
+BASH_GOT_GIT_MAKE_TMPL = BASH_GOT_GIT_MAKE_TMPL + '\n'.join(CMDS)
+def test__render_config_bash_go_git_makefile(testdirgeneric):
     (testdirectory,
     CONTAINENVPATH,
     SUBDIRPATH,
@@ -140,6 +148,9 @@ def test__render_config_config_invalid_missing(testdirgeneric):
     init_command._catalog_dependencies()
     from pprint import pprint as pp
     pp(init_command.registered_dependency_catalog)
+    init_command._render_config()
+    open('testout', 'w').write(BASH_GOT_GIT_MAKE_TMPL)
+    assert init_command.rendered == BASH_GOT_GIT_MAKE_TMPL
     
 def test__render_config_config_invalid_unexpected():
     init_command = Init('PATHTOPYTHONDIR')

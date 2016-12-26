@@ -27,10 +27,12 @@ import logging
 import site
 import sys
 
+import jinja2
+
 from containenv.config.dependencymaps import EXTENSION_MAP
 from containenv.config.dependencymaps import FILENAME_MAP
 from containenv.config.dependencymaps import DIRNAME_MAP
-from containenv.config.dockerfile_templates import ubuntu
+from containenv.config.dockerfile_templates import templates
 from containenv.display import run_tasks
 from containenv.exceptions import ProjectAlreadyInitialized
 from containenv.exceptions import ProjectDirectoryDoesNotExist
@@ -47,6 +49,7 @@ class Command(object):
     def __init__(self, metasource=os.curdir):
         self.metasource = metasource
         self.from_image = 'ubuntu' # this become optional with flag
+        self.dockerfile_template = templates[self.from_image] 
         logger.warning('self.metasource: {}'.format(self.metasource))
         self.tasks = [self._make_task(m) for m in [
             self.make_path,
@@ -139,6 +142,13 @@ class Command(object):
 
     def _render_config(self):
         '''produce a config file from the dependency catalog'''
+        self.ordered_dependencies = [
+            k for k in self.registered_dependency_catalog]
+        self.ordered_dependencies.sort()
+        print(self.ordered_dependencies)
+        self.rendered = jinja2.Template(self.dockerfile_template)\
+            .render(APTINSTALLS=self.ordered_dependencies)
+        
         
 
     def _write_config(self):
