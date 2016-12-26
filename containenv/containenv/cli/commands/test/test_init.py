@@ -89,9 +89,9 @@ def test__catalog_dependencies_none_registered(testdirskeleton):
         ('None of the nodes (files and directories) in this project are'
          ' registered with containenv.')
 
-def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
+@pytest.fixture
+def testdirgeneric(testdirskeleton):
     testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
-    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     gitdirpath = os.path.join(testdirectory, '.git')
     os.mkdir(gitdirpath)
     fnames = [os.path.join(testdirectory, n) for n in [
@@ -102,6 +102,21 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
                 os.path.join(gitdirpath, 'didntgetregistered.py')]] 
     for fn in fnames:
         open(fn, 'w').write('TESTTEXT')
+    return (testdirectory,
+            CONTAINENVPATH,
+            SUBDIRPATH,
+            init_command,
+            gitdirpath,
+            fnames)
+
+def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
+    (testdirectory,
+    CONTAINENVPATH,
+    SUBDIRPATH,
+    init_command,
+    gitdirpath,
+    fnames) = testdirgeneric
+    EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     init_command._catalog_dependencies()
     assert init_command.registered_dependency_catalog.pop('go') ==\
         set([fnames[0]])
@@ -115,8 +130,8 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirskeleton):
     assert init_command.unregistered_nodes ==\
         {fnames[3], SUBDIRPATH, CONTAINENVPATH}
 
-def test__render_config_config_invalid_missing():
-    init_command = Init('PATHTOPYTHONDIR')
+def test__render_config_config_invalid_missing(testdirskeleton):
+    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
     
 def test__render_config_config_invalid_unexpected():
     init_command = Init('PATHTOPYTHONDIR')

@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific dependency governing permissions and
 # limitations under the License.
 #
 
@@ -30,6 +30,7 @@ import sys
 from containenv.config.dependencymaps import EXTENSION_MAP
 from containenv.config.dependencymaps import FILENAME_MAP
 from containenv.config.dependencymaps import DIRNAME_MAP
+from containenv.config.dockerfile_templates import ubuntu
 from containenv.display import run_tasks
 from containenv.exceptions import ProjectAlreadyInitialized
 from containenv.exceptions import ProjectDirectoryDoesNotExist
@@ -45,6 +46,7 @@ class Command(object):
 
     def __init__(self, metasource=os.curdir):
         self.metasource = metasource
+        self.from_image = 'ubuntu' # this become optional with flag
         logger.warning('self.metasource: {}'.format(self.metasource))
         self.tasks = [self._make_task(m) for m in [
             self.make_path,
@@ -136,8 +138,8 @@ class Command(object):
             raise ProjectContainsNoRegisteredNodes(error)
 
     def _render_config(self):
-        '''produce a config file from the language catalog'''
-        pass
+        '''produce a config file from the dependency catalog'''
+        
 
     def _write_config(self):
         '''write the config to PROJECT/.containenv/Dockerfile?'''
