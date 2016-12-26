@@ -102,12 +102,12 @@ class Command(object):
     def _register_file(self, dirpath, fname, extension):
         # First use file extensions
         if extension in EXTENSION_MAP:
-            self.registered_dependency_catalog[EXTENSION_MAP[extension]]\
-               .add(os.path.join(dirpath, fname+extension))
+            self.registered_dependency_catalog[EXTENSION_MAP[extension]\
+                [self.from_image]].add(os.path.join(dirpath, fname+extension))
         # Then check against fnames
         elif fname in FILENAME_MAP:
-            self.registered_dependency_catalog[FILENAME_MAP[fname]]\
-               .add(os.path.join(dirpath, fname+extension))
+            self.registered_dependency_catalog[FILENAME_MAP[fname]\
+                [self.from_image]].add(os.path.join(dirpath, fname+extension))
         else:
             self.unregistered_nodes.add(os.path.join(dirpath, fname+extension))
 
@@ -115,7 +115,7 @@ class Command(object):
         fullpath = os.path.join(dirpath, dirn)
         if dirn in DIRNAME_MAP:
             self.registered_dependency_catalog[
-                DIRNAME_MAP[dirn]].add(fullpath)
+                DIRNAME_MAP[dirn][self.from_image]].add(fullpath)
             self.registered_directories.add(fullpath)
         else:
             self.unregistered_nodes.add(fullpath)

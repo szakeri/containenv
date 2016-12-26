@@ -118,11 +118,11 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
     fnames) = testdirgeneric
     EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     init_command._catalog_dependencies()
-    assert init_command.registered_dependency_catalog.pop('go') ==\
+    assert init_command.registered_dependency_catalog.pop('golang') ==\
         set([fnames[0]])
     assert init_command.registered_dependency_catalog.pop('make') ==\
         set([fnames[1]])
-    assert init_command.registered_dependency_catalog.pop('shell') ==\
+    assert init_command.registered_dependency_catalog.pop('bash') ==\
         set([fnames[2]])
     assert init_command.registered_dependency_catalog.pop('git') ==\
         set([gitdirpath])
@@ -130,8 +130,16 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
     assert init_command.unregistered_nodes ==\
         {fnames[3], SUBDIRPATH, CONTAINENVPATH}
 
-def test__render_config_config_invalid_missing(testdirskeleton):
-    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
+def test__render_config_config_invalid_missing(testdirgeneric):
+    (testdirectory,
+    CONTAINENVPATH,
+    SUBDIRPATH,
+    init_command,
+    gitdirpath,
+    fnames) = testdirgeneric
+    init_command._catalog_dependencies()
+    from pprint import pprint as pp
+    pp(init_command.registered_dependency_catalog)
     
 def test__render_config_config_invalid_unexpected():
     init_command = Init('PATHTOPYTHONDIR')

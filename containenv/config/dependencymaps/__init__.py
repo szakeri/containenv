@@ -1,9 +1,9 @@
-EXTENSION_MAP = { ".py": "python",
-                  ".c": "c",
-                  ".go": "go",
-                  ".js": "javascript",
-                  ".sh": "shell"}
+EXTENSION_MAP = { ".py": {"ubuntu": "python"},
+                  ".c":  {"ubuntu": "clang"},
+                  ".go": {"ubuntu": "golang"},
+                  ".js": {"ubuntu": "javascript"},
+                  ".sh": {"ubuntu": "bash"}}
 
-FILENAME_MAP = {"Makefile": "make"}
+FILENAME_MAP = {"Makefile": {"ubuntu": "make"}}
 
-DIRNAME_MAP = {".git": "git"}
+DIRNAME_MAP = {".git": {"ubuntu": "git"}}
