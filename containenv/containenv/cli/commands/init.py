@@ -24,6 +24,7 @@ Options:
 import collections
 import os
 import logging
+from pkg_resources import resource_filename
 import site
 import sys
 
@@ -32,7 +33,6 @@ import jinja2
 from containenv.config.dependencymaps import EXTENSION_MAP
 from containenv.config.dependencymaps import FILENAME_MAP
 from containenv.config.dependencymaps import DIRNAME_MAP
-from containenv.config.dockerfile_templates import templates
 from containenv.display import run_tasks
 from containenv.exceptions import ProjectAlreadyInitialized
 from containenv.exceptions import ProjectDirectoryDoesNotExist
@@ -49,14 +49,15 @@ class Command(object):
     def __init__(self, metasource=os.curdir):
         self.metasource = metasource
         self.from_image = 'ubuntu' # this become optional with flag
-        self.dockerfile_template = templates[self.from_image] 
+        with open(resource_filename(
+                'containenv.config.dockerfile_templates', self.from_image), 'r') as fh: 
+            self.dockerfile_template = fh.read()
         logger.warning('self.metasource: {}'.format(self.metasource))
         self.tasks = [self._make_task(m) for m in [
             self.make_path,
             self.check_initialization_state,
             self.make_containenv_dir,
             self.write_container_config,
-            self.write_entrypoint,
             self.write_runcontainenv,
             self.build_image,
             self.publish_image]]
@@ -145,15 +146,15 @@ class Command(object):
         self.ordered_dependencies = [
             k for k in self.registered_dependency_catalog]
         self.ordered_dependencies.sort()
-        print(self.ordered_dependencies)
         self.rendered = jinja2.Template(self.dockerfile_template)\
             .render(APTINSTALLS=self.ordered_dependencies)
-        
-        
 
     def _write_config(self):
-        '''write the config to PROJECT/.containenv/Dockerfile?'''
-        pass
+        '''write the config to PROJECT/.containenv/Dockerfile.from_image'''
+        basename = '.'.join(('Dockerfile', self.from_image))
+        self.dockerfile = os.path.join(self.containenvdir, basename)
+        with open(self.dockerfile, 'w') as df:
+            df.write(self.rendered)
 
     def write_container_config(self):
         '''create and write container config'''
@@ -161,15 +162,10 @@ class Command(object):
         self._render_config()
         self._write_config()
 
-    def write_entrypoint(self):
-        '''write the entrypoint script to PROJECT/.containenv/entrypoint.sh'''
-        # All of the host environment should be ingested into the container
-        pass
-
     def write_runcontainenv(self):
         '''write the runner script to PROJECT/.containenv/runcontainenv.sh'''
         # pass in all environment variables
-        pass
+        script = '''#! /bin/bash'''
 
     def _sanitize_tag(self):
         '''the result must be a valid image tag'''

@@ -91,23 +91,26 @@ def test__catalog_dependencies_none_registered(testdirskeleton):
 
 @pytest.fixture
 def testdirgeneric(testdirskeleton):
-    testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command = testdirskeleton
-    gitdirpath = os.path.join(testdirectory, '.git')
-    os.mkdir(gitdirpath)
-    fnames = [os.path.join(testdirectory, n) for n in [
-                os.path.join(SUBDIRPATH, 'foo.go'),
-                'Makefile.build',
-                'setup.sh',
-                'py.foo',
-                os.path.join(gitdirpath, 'didntgetregistered.py')]] 
-    for fn in fnames:
-        open(fn, 'w').write('TESTTEXT')
-    return (testdirectory,
-            CONTAINENVPATH,
-            SUBDIRPATH,
-            init_command,
-            gitdirpath,
-            fnames)
+    infiles = (os.path.join('SUB', 'foo.go'),
+               'Makefile.build',
+               'setup.sh',
+               'py.foo',
+               os.path.join('.git', 'didntgetregistered.py')) 
+    def _make_flesh(list_of_files=infiles):
+        testdirectory, CONTAINENVPATH, SUBDIRPATH, init_command =\
+            testdirskeleton
+        gitdirpath = os.path.join(testdirectory, '.git')
+        os.mkdir(gitdirpath)
+        fnames = [os.path.join(testdirectory, n) for n in list_of_files] 
+        for fn in fnames:
+            open(fn, 'w').write('TESTTEXT')
+        return (testdirectory,
+                CONTAINENVPATH,
+                SUBDIRPATH,
+                init_command,
+                gitdirpath,
+                fnames)
+    return _make_flesh
 
 def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
     (testdirectory,
@@ -115,7 +118,7 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
     SUBDIRPATH,
     init_command,
     gitdirpath,
-    fnames) = testdirgeneric
+    fnames) = testdirgeneric()
     EXPECTED_UNREGISTERED = {testdirectory, SUBDIRPATH, CONTAINENVPATH}
     init_command._catalog_dependencies()
     assert init_command.registered_dependency_catalog.pop('golang') ==\
@@ -131,20 +134,21 @@ def test__catalog_dependencies_bash_go_git_makefile(testdirgeneric):
         {fnames[3], SUBDIRPATH, CONTAINENVPATH}
 
 BASH_GOT_GIT_MAKE_TMPL = '''FROM   ubuntu:latest
-RUN    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y\n'''
+RUN    DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y\\'''
 CMDS = ['       bash \\',
         '       git \\',
         '       golang \\',
         '       make \\',
         '       && rm -rf /var/lib/apt/lists/*']
-BASH_GOT_GIT_MAKE_TMPL = BASH_GOT_GIT_MAKE_TMPL + '\n'.join(CMDS)
+BASH_GOT_GIT_MAKE_TMPL = BASH_GOT_GIT_MAKE_TMPL + '\n' + '\n'.join(CMDS)
+
 def test__render_config_bash_go_git_makefile(testdirgeneric):
     (testdirectory,
     CONTAINENVPATH,
     SUBDIRPATH,
     init_command,
     gitdirpath,
-    fnames) = testdirgeneric
+    fnames) = testdirgeneric()
     init_command._catalog_dependencies()
     from pprint import pprint as pp
     pp(init_command.registered_dependency_catalog)
@@ -152,17 +156,27 @@ def test__render_config_bash_go_git_makefile(testdirgeneric):
     open('testout', 'w').write(BASH_GOT_GIT_MAKE_TMPL)
     assert init_command.rendered == BASH_GOT_GIT_MAKE_TMPL
     
-def test__render_config_config_invalid_unexpected():
-    init_command = Init('PATHTOPYTHONDIR')
-    
-def test_write_container_config():
-    init_command = Init('PATHTOPYTHONDIR')
-    
-def test_write_entrypoint():
-    init_command = Init('PATHTOPYTHONDIR')
+def test_write_container_config(testdirgeneric):
+    (testdirectory,
+    CONTAINENVPATH,
+    SUBDIRPATH,
+    init_command,
+    gitdirpath,
+    fnames) = testdirgeneric()
+    init_command.write_container_config()
+    dfp = os.path.join(
+        CONTAINENVPATH, '.'.join(('Dockerfile', init_command.from_image)))
+    with open(dfp, 'r') as dfp:
+        assert dfp.read() == BASH_GOT_GIT_MAKE_TMPL
 
-def test_write_runcontainenv():
-    init_command = Init('PATHTOPYTHONDIR')
+def test_write_runcontainenv(testdirgeneric):
+    (testdirectory,
+    CONTAINENVPATH,
+    SUBDIRPATH,
+    init_command,
+    gitdirpath,
+    fnames) = testdirgeneric()
+
 
 def test__create_tag_noreg_notaginvalid_chars():
     init_command = Init('PATHTOPYTHONDIR')
